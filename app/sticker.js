@@ -6,7 +6,8 @@ const clamp01 = v => (v < 0 ? 0 : v > 1 ? 1 : v);
 const smooth = t => t * t * (3 - 2 * t);
 
 // Squared Euclidean distance transform (Felzenszwalb & Huttenlocher), in place.
-// grid holds 0 on the pixels we measure from and INF everywhere else.
+// grid holds 0 on the pixels we measure from and INF everywhere else. A Float32Array
+// is enough (exact for distances under 4096 px) and takes half the memory.
 export function edt(grid, w, h) {
   const n = Math.max(w, h);
   const f = new Float64Array(n), d = new Float64Array(n), z = new Float64Array(n + 1);
@@ -46,7 +47,7 @@ function edt1d(f, n, d, v, z) {
 
 // distance from every pixel to the nearest pixel where in(i) is true
 function distTo(w, h, inside) {
-  const g = new Float64Array(w * h);
+  const g = new Float32Array(w * h);
   for (let i = 0; i < g.length; i++) g[i] = inside(i) ? 0 : INF;
   edt(g, w, h);
   for (let i = 0; i < g.length; i++) g[i] = Math.sqrt(g[i]);
@@ -393,14 +394,15 @@ const OUTLINE_INK = '#2A2630';
 
 // The sticker body: border, outline and the subject, trimmed, without the shadow.
 // img: ImageData; border: fraction of the subject's long side; outline: none | line | double | dashed.
-export function render({ img, mask, w, h, border = 0.035, color = '#ffffff', outline = 'none', outlineColor = OUTLINE_INK }) {
+// px: output pixels per working pixel, so the few fixed sizes grow with a bigger render.
+export function render({ img, mask, w, h, border = 0.035, color = '#ffffff', outline = 'none', outlineColor = OUTLINE_INK, px = 1 }) {
   const box = bbox(mask, w, h);
   if (!box) return null;
   const side = Math.max(box.w, box.h);
   const r = border * side, s = r * 0.55;
-  const t = outline === 'line' ? Math.max(1.5, side * 0.008) : outline === 'double' ? Math.max(3, side * 0.014 + r * 0.45) : 0;
-  const dl = outline === 'dashed' ? Math.max(1.5, side * 0.0065) : 0;
-  const pad = Math.ceil(r + s + t + dl * 2 + 3);
+  const t = outline === 'line' ? Math.max(1.5 * px, side * 0.008) : outline === 'double' ? Math.max(3 * px, side * 0.014 + r * 0.45) : 0;
+  const dl = outline === 'dashed' ? Math.max(1.5 * px, side * 0.0065) : 0;
+  const pad = Math.ceil(r + s + t + dl * 2 + 3 * px);
   const rx = box.x - pad, ry = box.y - pad, rw = box.w + 2 * pad, rh = box.h + 2 * pad, n = rw * rh;
 
   // subject pixels and their alpha, in region coordinates
@@ -423,8 +425,9 @@ export function render({ img, mask, w, h, border = 0.035, color = '#ffffff', out
   // the cut line: grow the subject by r + s, then shrink it back by s, which
   // rounds it off and fills the little gaps a die cutter would skip
   let shape = alpha;
-  if (r >= 0.5) {
-    const g = new Float64Array(n);
+  const cut = r >= 0.5 * px;
+  if (cut) {
+    const g = new Float32Array(n);
     for (let i = 0; i < n; i++) g[i] = alpha[i] >= 64 ? 0 : INF;
     edt(g, rw, rh);
     const grow = (r + s) * (r + s);
@@ -440,9 +443,10 @@ export function render({ img, mask, w, h, border = 0.035, color = '#ffffff', out
   }
 
   const body = canvas(rw, rh), bg = body.getContext('2d');
-  if (t > 0) bg.drawImage(tint(ringAround(shape, rw, rh, t), rw, rh, outlineColor), 0, 0);
-  if (r >= 0.5) bg.drawImage(tint(shape, rw, rh, color), 0, 0);
-  bg.drawImage(toCanvas(sub), 0, 0);
+  const layer = c => { bg.drawImage(c, 0, 0); free(c); };
+  if (t > 0) layer(tint(ringAround(shape, rw, rh, t), rw, rh, outlineColor));
+  if (cut) layer(tint(shape, rw, rh, color));
+  layer(toCanvas(sub));
   if (dl > 0) {
     bg.save();
     bg.strokeStyle = outlineColor; bg.lineWidth = dl; bg.lineJoin = 'round'; bg.lineCap = 'round';
@@ -474,11 +478,11 @@ function tint(a, w, h, color) {
 }
 
 // Turn, flip and drop the shadow (which always falls down, whatever the turn).
-export function finish(body, { rotate = 0, flip = false, shadow = true, side = 100, r = 0 } = {}) {
+export function finish(body, { rotate = 0, flip = false, shadow = true, side = 100, r = 0, px = 1 } = {}) {
   const rad = rotate * Math.PI / 180, c = Math.abs(Math.cos(rad)), s = Math.abs(Math.sin(rad));
   const bw = body.width, bh = body.height;
   const rw = Math.ceil(bw * c + bh * s), rh = Math.ceil(bw * s + bh * c);
-  const sp = shadow ? Math.ceil(side * 0.035 + r * 0.4 + 4) : 0;
+  const sp = shadow ? Math.ceil(side * 0.035 + r * 0.4 + 4 * px) : 0;
   const out = canvas(rw + 2 * sp, rh + 2 * sp), g = out.getContext('2d');
   g.imageSmoothingQuality = 'high';
   g.translate(out.width / 2, out.height / 2);
@@ -486,8 +490,8 @@ export function finish(body, { rotate = 0, flip = false, shadow = true, side = 1
   if (flip) g.scale(-1, 1);
   if (shadow) {
     g.shadowColor = 'rgba(52, 36, 20, 0.30)';
-    g.shadowBlur = side * 0.018 + r * 0.25 + 2;
-    g.shadowOffsetY = side * 0.008 + r * 0.12 + 1;
+    g.shadowBlur = side * 0.018 + r * 0.25 + 2 * px;
+    g.shadowOffsetY = side * 0.008 + r * 0.12 + px;
   }
   g.drawImage(body, -bw / 2, -bh / 2);
   return out;
@@ -500,6 +504,7 @@ export function fit(c, long) {
     const h = canvas(cur.width / 2, cur.height / 2), g = h.getContext('2d');
     g.imageSmoothingQuality = 'high';
     g.drawImage(cur, 0, 0, h.width, h.height);
+    if (cur !== c) free(cur);
     cur = h;
   }
   const k = long / Math.max(cur.width, cur.height);
@@ -507,6 +512,45 @@ export function fit(c, long) {
   const out = canvas(cur.width * k, cur.height * k), g = out.getContext('2d');
   g.imageSmoothingQuality = 'high';
   g.drawImage(cur, 0, 0, out.width, out.height);
+  if (cur !== c) free(cur);
+  return out;
+}
+
+// Let go of a canvas we're done with now, not whenever the garbage collector gets
+// round to it: Safari on an iPad only allows so much canvas memory in all.
+export function free(c) {
+  c.width = c.height = 0;
+}
+
+// A mask made bigger, smoothly (bilinear). Output pixel (X, Y) starts at
+// (ax + X * sx, ay + Y * sy) in mask pixels, where mask pixel i spans i..i+1, and
+// shows the mask at its centre. Outside the mask it's 0, so the photo's edge stays a clean cut.
+export function upscale(mask, w, h, ow, oh, ax, ay, sx, sy) {
+  const out = new Uint8Array(ow * oh);
+  const along = (n, a, s, len) => {
+    const i0 = new Int32Array(n).fill(-1), i1 = new Int32Array(n), f = new Float32Array(n);
+    for (let X = 0; X < n; X++) {
+      const p = a + (X + 0.5) * s;
+      if (p < 0 || p >= len) continue;
+      const t = Math.min(len - 1, Math.max(0, p - 0.5)), i = Math.floor(t);
+      i0[X] = i; i1[X] = Math.min(len - 1, i + 1); f[X] = t - i;
+    }
+    return { i0, i1, f };
+  };
+  const xs = along(ow, ax, sx, w), ys = along(oh, ay, sy, h);
+  for (let Y = 0; Y < oh; Y++) {
+    const y0 = ys.i0[Y];
+    if (y0 < 0) continue;
+    const r0 = y0 * w, r1 = ys.i1[Y] * w, fy = ys.f[Y], o = Y * ow;
+    for (let X = 0; X < ow; X++) {
+      const x0 = xs.i0[X];
+      if (x0 < 0) continue;
+      const x1 = xs.i1[X], fx = xs.f[X];
+      const top = mask[r0 + x0] + (mask[r0 + x1] - mask[r0 + x0]) * fx;
+      const bot = mask[r1 + x0] + (mask[r1 + x1] - mask[r1 + x0]) * fx;
+      out[o + X] = Math.round(top + (bot - top) * fy);
+    }
+  }
   return out;
 }
 

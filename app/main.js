@@ -8,8 +8,8 @@ import { PAGES, layout as sheetLayout, drawPage, pdf } from './sheet.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
-const MAX_ORIG = 2400;   // longest side we keep of the photo
-const MAX_WORK = 1200;   // longest side we cut and paint at
+const MAX_ORIG = 2400;   // longest side we keep of the photo (exports are made from this)
+const MAX_WORK = 1200;   // longest side we cut, paint and preview at
 const COLORS = ['#FFFFFF', '#FFF3D6', '#FFD1DC', '#FFE27A', '#BDEFD8', '#BFE3FF', '#D9C9FF', '#26232B'];
 const LINE_COLORS = ['#2A2630', '#FFFFFF', '#E8505B', '#FF8FB1', '#F5A524', '#3BAA7A', '#3D8BFD', '#8B6CF6'];
 const BRUSHES = new Set(['erase', 'restore']);
@@ -309,9 +309,9 @@ const exportKey = () => `${st.version}|${prefs.size}`;
 
 function stickerBlob() {
   if (st.blob && st.blobKey === exportKey()) return Promise.resolve(st.blob);
-  // the preview already rendered it full size; Save just scales that
+  // the preview already rendered it at the working size; the export is made again from the photo
   const key = exportKey(), base = st.full?.v === st.version ? st.full.c : st.doc?.mask ? C.sticker(st.doc) : null;
-  const c = base && S.fit(base, C.SIZES[prefs.size]);
+  const c = base && C.exported(st.doc, base, prefs.size);
   if (!c) return Promise.reject(new Error('empty'));
   return C.toBlob(c).then(b => {
     if (key === exportKey()) { st.blob = b; st.blobKey = key; st.blobDims = [c.width, c.height]; showSize(); }
@@ -319,11 +319,15 @@ function stickerBlob() {
   });
 }
 
-// keep a PNG of the current sticker ready, so Save can hand it over at once
+// once things settle: the full preview first, then a PNG of the current sticker ready,
+// so Save can hand it over at once
 async function prerender() {
-  if (!st.doc?.mask || st.tool) return;
-  try { await stickerBlob(); } catch { st.blobDims = null; showSize(); }
   if (quick) { quick = false; draw(); }
+  if (!st.doc?.mask || st.tool) return;
+  const v = st.version;
+  await frames(1);
+  if (v !== st.version || st.tool) return;
+  try { await stickerBlob(); } catch { st.blobDims = null; showSize(); }
 }
 
 function showSize() {
@@ -1010,7 +1014,12 @@ async function refreshRecent() {
 async function openSheet() {
   const items = await store.list();
   if (!items.length) return;
-  const bitmaps = await Promise.all(items.map(it => createImageBitmap(it.blob)));
+  // no bigger than a sheet ever draws them (a Large sticker can be 2400 px), to spare an iPad's memory
+  const bitmaps = await Promise.all(items.map(it => {
+    const k = 1300 / Math.max(it.w, it.h, 1);
+    return k < 1 ? createImageBitmap(it.blob, { resizeWidth: Math.round(it.w * k), resizeHeight: Math.round(it.h * k), resizeQuality: 'high' })
+      : createImageBitmap(it.blob);
+  }));
   st.sheet = { items, bitmaps, off: new Set() };
   const pickBox = $('#sheetPick');
   pickBox.textContent = '';

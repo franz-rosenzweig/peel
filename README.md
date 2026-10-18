@@ -43,8 +43,9 @@ Live at **https://stuffs.tiresia.xyz/stickers/**, part of [stuffs](https://stuff
 - The preview background switches between paper, see-through (checkerboard) and dark.
 
 **Getting it out**
-- **Size**: Small (512 px), Medium (1024 px) or Large (as big as the photo allows). Every export is a PNG with a
-  see-through background.
+- **Size**: Small (512 px), Medium (1024 px) or Large (as big as the photo allows, up to 2400 px). Every export
+  is a PNG with a see-through background. Cutting and fixing happen on a copy of the photo up to 1200 px, but the
+  export is made again from the photo itself, so a small thing in a big photo still comes out sharp.
 - **Copy / Save / Keep**: Copy puts the PNG on the clipboard; Save opens the share sheet on a phone or tablet
   (Save Image, Save to Files) and downloads on a computer. Everything copied, saved or kept lands in
   **My stickers** (IndexedDB, this browser only), with what it takes to **open it again** and change it.
@@ -59,7 +60,7 @@ Plain ES modules, no build step.
 |---|---|
 | `app/index.html`, `app/style.css` | The page. Phone, tablet and computer layouts; light and dark. |
 | `app/main.js` | Screens, tabs, tools, pinch and zoom, undo/redo, copy/save/keep, batch, recent photos, the sheet dialog. `window.__peel` is there for checks. |
-| `app/compose.js` | The pipeline from a "doc" (photo, mask, settings) to the finished PNG: edge → photo look → text → border/outline → turn/shadow → size, cached step by step. |
+| `app/compose.js` | The pipeline from a "doc" (photo, mask, settings) to the finished PNG: edge → photo look → text → border/outline → turn/shadow → size, cached step by step. Exports are made again from the full-size photo, around the subject only, with the mask made bigger smoothly and the text drawn again. |
 | `app/sticker.js` | Masks: the distance transform, the die-cut border, outlines (incl. marching squares for the dashed line), shapes, brushes, wand, pieces, edge tools. |
 | `app/cutout.js` | Loads ONNX Runtime Web and the model, runs it. WebGPU when the browser has it, otherwise WebAssembly on up to 4 threads. Falls back to WebAssembly if the GPU fails or returns nonsense. |
 | `app/fx.js`, `app/text.js`, `app/sheet.js` | Photo looks; text layout and fonts; sheet layout and a small PDF writer. |

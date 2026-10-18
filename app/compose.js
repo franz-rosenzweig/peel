@@ -1,11 +1,15 @@
 // From a "doc" (photo, mask and settings) to the finished sticker:
 //   mask → edge tools → photo look → text → border/outline → turn/flip/shadow → size.
 // Each step is cached on the doc, so moving one slider only redoes what it touches.
+// Editing and the preview work at the working size (up to 1200 px). An export is made
+// again from the full-size photo, around the subject only, so it comes out sharp.
 import * as S from './sticker.js';
 import { applyFx } from './fx.js';
 import { drawText, hasText } from './text.js';
 
-export const SIZES = { S: 512, M: 1024, L: 4096 };
+// long side of an export; Large is as big as the photo allows, up to 2400 px so it
+// stays quick (and fits in memory) on an iPad
+export const SIZES = { S: 512, M: 1024, L: 2400 };
 const C = new WeakMap();
 const cacheOf = doc => { let c = C.get(doc); if (!c) C.set(doc, (c = {})); return c; };
 
@@ -51,21 +55,71 @@ export function layers(doc) {
         od[di * 4 + 3] = 255; mk[di] = mask[si];
       }
     }
-    // the letters go over the photo ("over" with straight alpha)
-    for (let i = 0; i < w * h; i++) {
-      const ta = td[i * 4 + 3];
-      if (!ta) continue;
-      const a = ta / 255, b = (mk[i] / 255) * (1 - a), oa = a + b, o = i * 4;
-      od[o] = (td[o] * a + od[o] * b) / oa;
-      od[o + 1] = (td[o + 1] * a + od[o + 1] * b) / oa;
-      od[o + 2] = (td[o + 2] * a + od[o + 2] * b) / oa;
-      mk[i] = Math.round(oa * 255);
-    }
+    over(od, mk, td);
     lay = { img: out, mask: mk, w, h, ox: M, oy: M };
   }
   lay.img0 = img;
   c.lay = lay; c.layKey = key;
   return lay;
+}
+
+// the letters go over the photo ("over" with straight alpha), in place
+function over(od, mk, td) {
+  for (let i = 0; i < mk.length; i++) {
+    const ta = td[i * 4 + 3];
+    if (!ta) continue;
+    const a = ta / 255, b = (mk[i] / 255) * (1 - a), oa = a + b, o = i * 4;
+    od[o] = (td[o] * a + od[o] * b) / oa;
+    od[o + 1] = (td[o + 1] * a + od[o + 1] * b) / oa;
+    od[o + 2] = (td[o + 2] * a + od[o + 2] * b) / oa;
+    mk[i] = Math.round(oa * 255);
+  }
+}
+
+// The same layers k times bigger, but only around the subject: the photo straight
+// from doc.orig (with its look), the mask (edge tools and all) made bigger smoothly,
+// and the text drawn again at the new size.
+function bigLayers(doc, k) {
+  const c = cacheOf(doc), L = layers(doc);
+  if (c.big?.from === L && c.big.k === k) return c.big;
+  const box = S.bbox(L.mask, L.w, L.h);   // the same subject box render() goes by
+  if (!box) return null;
+  const { crop, W, H } = doc, kx = crop.w / W, ky = crop.h / H, f = k / kx, m = 3;
+  // the part we need in photo pixels, with the soft edge just outside the box, starting
+  // on a whole pixel so that at full size the photo is copied as it is
+  const gx = Math.floor(crop.x + (box.x - L.ox - m) * kx), gy = Math.floor(crop.y + (box.y - L.oy - m) * ky);
+  const w = Math.ceil((crop.x + (box.x + box.w - L.ox + m) * kx - gx) * f);
+  const h = Math.ceil((crop.y + (box.y + box.h - L.oy + m) * ky - gy) * f);
+
+  let img = new ImageData(w, h);
+  if (!doc.textOnly) {
+    // only from the part of the photo that was picked
+    const pc = S.canvas(w, h), pg = pc.getContext('2d', { willReadFrequently: true });
+    const x0 = Math.max(gx, Math.floor(crop.x)), y0 = Math.max(gy, Math.floor(crop.y));
+    const x1 = Math.min(gx + w / f, Math.ceil(crop.x + crop.w)), y1 = Math.min(gy + h / f, Math.ceil(crop.y + crop.h));
+    if (x1 > x0 && y1 > y0) {
+      pg.imageSmoothingQuality = 'high';
+      pg.drawImage(doc.orig, x0, y0, x1 - x0, y1 - y0, (x0 - gx) * f, (y0 - gy) * f, (x1 - x0) * f, (y1 - y0) * f);
+    }
+    img = applyFx(pg.getImageData(0, 0, w, h), doc.fx);
+    S.free(pc);
+  }
+
+  const mask = doc.textOnly ? new Uint8Array(w * h)
+    : S.upscale(edgeMask(doc), W, H, w, h, (gx - crop.x) / kx, (gy - crop.y) / ky, 1 / (f * kx), 1 / (f * ky));
+  if (doc.hasAlpha && doc.kind === 'cut' && !doc.textOnly) {
+    // a picture that came with a see-through background keeps its own crisp edge
+    const d = img.data;
+    for (let i = 0; i < mask.length; i++) if (d[i * 4 + 3] < mask[i]) mask[i] = d[i * 4 + 3];
+  }
+  if (hasText(doc.text)) {
+    const tc = S.canvas(w, h), tg = tc.getContext('2d', { willReadFrequently: true });
+    drawText(tg, doc.text, W, H, k, (crop.x - gx) * f, (crop.y - gy) * f);
+    over(img.data, mask, tg.getImageData(0, 0, w, h).data);
+    S.free(tc);
+  }
+  c.big = { img, mask, w, h, from: L, k };
+  return c.big;
 }
 
 // half size, for live previews while a slider moves
@@ -85,18 +139,44 @@ function halfOf(L) {
   return L.half;
 }
 
+// The sticker at the working size, or at half that while a slider moves. With a
+// size (S, M or L) it's the PNG to hand over instead, as exported() makes it.
 export function sticker(doc, { quick = false, size = null } = {}) {
-  const L0 = layers(doc), L = quick ? halfOf(L0) : L0;
+  const L0 = layers(doc), out = finished(doc, quick ? halfOf(L0) : L0);
+  if (!size || !out) return out;
+  const png = exported(doc, out, size);
+  if (png !== out) S.free(out);
+  return png;
+}
+
+// border/outline, then turn/flip/shadow; px is output pixels per working pixel
+function finished(doc, L, px = 1) {
   const st = doc.style, plain = st.mode === 'cutout';
   const body = S.render({
-    img: L.img, mask: L.mask, w: L.w, h: L.h,
+    img: L.img, mask: L.mask, w: L.w, h: L.h, px,
     border: plain ? 0 : st.border / 100, color: st.color,
     outline: plain ? 'none' : st.outline, outlineColor: st.outlineColor,
   });
   if (!body) return null;
-  const out = S.finish(body.canvas, { rotate: st.rotate, flip: st.flip, shadow: !plain && st.shadow, side: body.side, r: body.r });
-  return size ? S.fit(out, SIZES[size] || SIZES.M) : out;
+  const out = S.finish(body.canvas, { rotate: st.rotate, flip: st.flip, shadow: !plain && st.shadow, side: body.side, r: body.r, px });
+  S.free(body.canvas);
+  return out;
 }
+
+// The PNG for Small, Medium or Large. base is the sticker at the working size. When the
+// photo has more pixels than that, the sticker is made again from the photo itself, as
+// big as the size wants (or the photo allows), and looks the same, only sharper.
+export function exported(doc, base, size) {
+  const want = SIZES[size] || SIZES.M, long = Math.max(base.width, base.height);
+  const k = Math.min(want / long * 1.02, native(doc));
+  const L = k > 1.05 && bigLayers(doc, k), big = L ? finished(doc, L, k) : null;
+  const out = S.fit(big || base, want);
+  if (big && out !== big) S.free(big);
+  return out;
+}
+
+// photo pixels per working pixel (text on its own can be drawn at any size)
+const native = doc => (doc.textOnly ? Infinity : Math.min(doc.crop.w / doc.W, doc.crop.h / doc.H));
 
 export const toBlob = (c, type = 'image/png', q) =>
   new Promise((res, rej) => c.toBlob(b => (b ? res(b) : rej(new Error('encode'))), type, q));
