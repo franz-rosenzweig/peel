@@ -150,6 +150,16 @@ main { max-width: 1240px; margin: 0 auto; padding: 0 20px 24px; }
 }
 .stagebar span { flex: 1; min-width: 0; }
 
+.splitpill {
+  position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 8px; max-width: calc(100% - 24px);
+  min-height: 44px; padding: 8px 18px; border-radius: 999px; border: 0; cursor: pointer;
+  background: var(--card); color: var(--ink); font: inherit; font-weight: 800; font-size: 15px;
+  box-shadow: var(--shadow), 0 0 0 1.5px var(--accent);
+}
+.splitpill svg { width: 18px; height: 18px; color: var(--accent); flex: none; }
+.splitpill:hover { background: var(--accent-soft); }
+
 .busy {
   position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 10px; background: var(--wash); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); text-align: center; padding: 20px;

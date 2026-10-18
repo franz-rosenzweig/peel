@@ -19,6 +19,9 @@ Live at **https://stuffs.tiresia.xyz/stickers/**, part of [stuffs](https://stuff
 - **Circle, Heart, Square**: photo stickers in a shape, no cutting involved.
 - **Pick the thing**: drag a box around what you want and it cuts again from just that part, which also
   gives a small subject more detail. For shapes it's "Move it", to choose which part of the photo fills them.
+- **Several stickers from one photo**: after Keep, Peel goes straight back to the whole photo so you can box
+  the next part. If the cutout found separate things (three people standing apart, say), **Keep each piece
+  separately** makes one sticker of each in one go.
 - **Erase / Bring back**: brushes for fixing the cutout by hand. Undo goes back 20 steps.
 - **Border**: none to chunky, eight colours plus any colour, shadow on or off. The border is the subject
   grown and then shrunk back (a morphological closing on a distance transform), so it's smooth and fills
@@ -38,7 +41,7 @@ Plain ES modules, no build step.
 | `app/index.html`, `app/style.css` | The page. Phone, tablet and computer layouts; light and dark. |
 | `app/main.js` | Screens, tools, copy/save, the stage drawing. `window.__peel` is there for checks. |
 | `app/cutout.js` | Loads ONNX Runtime Web and the model, runs it. WebGPU when the browser has it, otherwise WebAssembly on up to 4 threads. Falls back to WebAssembly if the GPU fails or returns nonsense. |
-| `app/sticker.js` | Masks, the distance transform, the border, shapes, brushes. |
+| `app/sticker.js` | Masks, the distance transform, the border, shapes, brushes, splitting into pieces. |
 | `app/store.js` | My stickers (IndexedDB) and a tiny zip writer. |
 
 The model (`app/models/isnet-general-h2f.onnx`) and ONNX Runtime (`app/vendor/ort/`) aren't in git.

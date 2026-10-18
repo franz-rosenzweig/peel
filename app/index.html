@@ -53,6 +53,10 @@
         <button class="btn small" id="whole" type="button" hidden>Whole photo</button>
         <button class="btn small primary" id="doneFix" type="button">Done</button>
       </div>
+      <button class="splitpill" id="split" type="button" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-scissors"/></svg>
+        <span>Keep each piece separately (<span id="splitN">2</span>)</span>
+      </button>
       <div class="busy" id="busy" hidden>
         <svg class="snip" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-scissors"/></svg>
         <p id="busyText">Cutting it out…</p>
@@ -117,7 +121,7 @@
 
 <footer class="foot">
   Peel works entirely in your browser. The cutting out is done by IS-Net (Apache-2.0) running on ONNX Runtime Web (MIT).
-  Part of <a href="/">stuffs</a>.
+  <a href="https://github.com/franz-rosenzweig/peel">Source</a> (MIT). Part of <a href="/">stuffs</a>.
 </footer>
 
 <dialog id="helpDlg">
@@ -129,6 +133,8 @@
     <p>In GoodNotes, circle the sticker with the lasso, tap it and choose <b>Add Element</b>. It goes into your Elements, sorted into collections like a sticker book.</p>
     <h3>A whole set</h3>
     <p>Tap <b>Save all</b> under My stickers and choose <b>Save Images</b>, which puts them in Photos. Then in GoodNotes, open Elements, make a new collection and import them from Photos.</p>
+    <h3>Several stickers from one photo</h3>
+    <p>Tap <b>Pick the thing</b>, box the first part and tap <b>Keep</b>. Peel goes straight back to the whole photo so you can box the next part, and so on. If the cutout already found separate things, like three people standing apart, <b>Keep each piece separately</b> makes one sticker of each in one go.</p>
     <h3>Something else?</h3>
     <p>They're ordinary PNG pictures with see-through backgrounds, so they work in Notability, Freeform, Procreate, Messages, Canva and anywhere else that takes a picture.</p>
     <h3>When the cutout isn't right</h3>

@@ -104,6 +104,53 @@ export function cleanMatte(m, w, h) {
 
 const smooth = t => t * t * (3 - 2 * t);
 
+// Separate pieces in a mask (things that don't touch), biggest first. Each kept
+// pixel, soft edge included, goes to the piece it's connected to; pieces much
+// smaller than the biggest one don't count. Returns { count, labels }.
+export function pieces(mask, w, h, minFrac = 0.05) {
+  const n = w * h, lab = new Int32Array(n), stack = new Int32Array(n), sizes = [0];
+  for (let i = 0; i < n; i++) {
+    if (mask[i] < 128 || lab[i]) continue;
+    const id = sizes.length;
+    let sp = 0, size = 0;
+    stack[sp++] = i; lab[i] = id;
+    while (sp) {
+      const p = stack[--sp], x = p % w;
+      size++;
+      if (x > 0 && !lab[p - 1] && mask[p - 1] >= 128) { lab[p - 1] = id; stack[sp++] = p - 1; }
+      if (x < w - 1 && !lab[p + 1] && mask[p + 1] >= 128) { lab[p + 1] = id; stack[sp++] = p + 1; }
+      if (p >= w && !lab[p - w] && mask[p - w] >= 128) { lab[p - w] = id; stack[sp++] = p - w; }
+      if (p < n - w && !lab[p + w] && mask[p + w] >= 128) { lab[p + w] = id; stack[sp++] = p + w; }
+    }
+    sizes.push(size);
+  }
+  const big = Math.max(0, ...sizes), min = Math.max(big * minFrac, n * 0.002);
+  const order = sizes.map((s, id) => [s, id]).filter(([s, id]) => id && s >= min).sort((a, b) => b[0] - a[0]);
+  const remap = new Int32Array(sizes.length);
+  order.forEach(([, id], k) => { remap[id] = k + 1; });
+  // spread the labels out over the soft edge, breadth first, so the fringe follows its piece
+  const queue = new Int32Array(n);
+  let qh = 0, qt = 0;
+  for (let i = 0; i < n; i++) {
+    lab[i] = lab[i] ? remap[lab[i]] : 0;
+    if (lab[i]) queue[qt++] = i;
+  }
+  while (qh < qt) {
+    const p = queue[qh++], x = p % w, id = lab[p];
+    for (const q of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, p - w, p + w]) {
+      if (q < 0 || q >= n || lab[q] || !mask[q]) continue;
+      lab[q] = id; queue[qt++] = q;
+    }
+  }
+  return { count: order.length, labels: lab };
+}
+
+export function piece(mask, labels, id) {
+  const out = new Uint8Array(mask.length);
+  for (let i = 0; i < mask.length; i++) if (labels[i] === id) out[i] = mask[i];
+  return out;
+}
+
 export function shapeMask(kind, w, h) {
   const c = canvas(w, h), g = c.getContext('2d');
   g.fillStyle = '#fff';

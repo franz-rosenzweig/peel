@@ -16,7 +16,7 @@ const st = {
   border: 3.5, color: '#FFFFFF', shadow: true,
   undo: [], version: 0, keptVer: -1,
   blob: null, blobVer: -1, half: null,
-  view: null, cursor: null, drag: null, stroke: null, subC: null, run: 0,
+  view: null, cursor: null, drag: null, stroke: null, subC: null, run: 0, pieces: null,
 };
 
 /* ---------- loading a photo ---------- */
@@ -116,6 +116,7 @@ function setMask(m) {
   st.mask = m;
   st.maskVer++;
   syncSub();
+  updatePieces();
   changed();
 }
 
@@ -309,6 +310,7 @@ function setupPointer() {
       st.stroke = null;
       st.maskVer++;
       st.version++;
+      updatePieces();
     }
     if (e.pointerType !== 'mouse') st.cursor = null;
     draw();
@@ -365,6 +367,7 @@ function setTool(t) {
   $('#whole').hidden = t !== 'crop';
   $('#brushRow').hidden = !(t === 'erase' || t === 'restore');
   for (const b of document.querySelectorAll('[data-tool]')) b.setAttribute('aria-pressed', String(b.dataset.tool === t));
+  showSplit();
   if (!t) changed();
   else draw();
 }
@@ -454,20 +457,55 @@ function download(blob, name) {
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
 
+const newId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+
 async function keep(blob, auto) {
+  if (!st.mask) return;
   if (st.keptVer === st.version) {
-    if (!auto) toast('That one’s already in My stickers.');
+    if (!auto) { toast('That one’s already in My stickers.'); nextPart(); }
     return;
   }
   st.keptVer = st.version;
   blob ??= await stickerBlob();
   const bmp = await createImageBitmap(blob).catch(() => null);
-  await store.add({
-    id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
-    made: Date.now(), name: st.name, blob, w: bmp?.width || 0, h: bmp?.height || 0,
-  });
+  await store.add({ id: newId(), made: Date.now(), name: st.name, blob, w: bmp?.width || 0, h: bmp?.height || 0 });
   await refreshTray();
-  if (!auto) toast('Kept. It’s in My stickers.');
+  if (!auto) nextPart();
+}
+
+// After Keep, go straight to boxing the next part of the same photo.
+function nextPart() {
+  if (st.tool !== 'crop') setTool('crop');
+  $('#hint').textContent = 'Kept! Now drag a box around the next part, or tap Done.';
+}
+
+/* ---------- split: one sticker per separate piece ---------- */
+
+function updatePieces() {
+  st.pieces = st.kind === 'cut' && st.mask ? S.pieces(st.mask, st.W, st.H) : null;
+  showSplit();
+}
+
+function showSplit() {
+  const n = st.pieces?.count || 0;
+  $('#split').hidden = n < 2 || !!st.tool || !st.mask;
+  $('#splitN').textContent = n;
+}
+
+async function splitKeep() {
+  const p = st.pieces;
+  if (!p || p.count < 2) return;
+  const opts = { border: st.border / 100, color: st.color, shadow: st.shadow }, base = Date.now();
+  for (let id = 1; id <= p.count; id++) {
+    const c = S.render({ img: st.img, mask: S.piece(st.mask, p.labels, id), w: st.W, h: st.H, ...opts });
+    if (!c) continue;
+    const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+    // the biggest piece first in My stickers
+    await store.add({ id: newId(), made: base + p.count - id, name: `${st.name}-${id}`, blob, w: c.width, h: c.height });
+  }
+  st.keptVer = st.version;
+  await refreshTray();
+  toast(`Kept ${p.count} stickers, one for each piece. They’re in My stickers.`, 4500);
 }
 
 let urls = [];
@@ -644,6 +682,7 @@ function setup() {
   $('#copy').addEventListener('click', copySticker);
   $('#save').addEventListener('click', saveSticker);
   $('#keep').addEventListener('click', () => keep(null, false));
+  $('#split').addEventListener('click', splitKeep);
   $('#saveAll').addEventListener('click', saveAll);
 
   $('#help').addEventListener('click', () => $('#helpDlg').showModal());
@@ -667,6 +706,6 @@ setup();
 
 // for checks from the console and the test walker
 window.__peel = {
-  st, loadBlob, setKind, setTool, undo, keep, sticker: () => sticker(false), which: cut.which,
+  st, loadBlob, setKind, setTool, undo, keep, splitKeep, list: store.list, sticker: () => sticker(false), which: cut.which,
   async loadURL(u, name) { const b = await (await fetch(u)).blob(); await loadBlob(b, name || 'test'); },
 };
