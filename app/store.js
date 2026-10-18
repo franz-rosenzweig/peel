@@ -1,50 +1,61 @@
-// "My stickers": kept in this browser's IndexedDB. If that isn't available
-// (a private window, blocked storage) they live in memory until the tab closes.
+// Kept in this browser's IndexedDB: "stickers" (My stickers, each with what it
+// takes to reopen it) and "photos" (the last few photos opened). If IndexedDB
+// isn't available (a private window, blocked storage) they live in memory.
 
-const DB = 'peel', STORE = 'stickers';
+const DB = 'peel', STORES = ['stickers', 'photos'];
 let dbP = null;
-const mem = new Map();
+const mem = { stickers: new Map(), photos: new Map() };
 
 function open() {
   dbP ??= new Promise((res, rej) => {
-    const r = indexedDB.open(DB, 1);
-    r.onupgradeneeded = () => r.result.createObjectStore(STORE, { keyPath: 'id' });
+    const r = indexedDB.open(DB, 2);
+    r.onupgradeneeded = () => {
+      for (const s of STORES) if (!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s, { keyPath: 'id' });
+    };
     r.onsuccess = () => res(r.result);
     r.onerror = () => rej(r.error);
   }).catch(() => null);
   return dbP;
 }
 
-function tx(db, mode, fn) {
+function tx(db, store, mode, fn) {
   return new Promise((res, rej) => {
-    const t = db.transaction(STORE, mode), r = fn(t.objectStore(STORE));
+    const t = db.transaction(store, mode), r = fn(t.objectStore(store));
     t.oncomplete = () => res(r?.result);
     t.onerror = () => rej(t.error);
   });
 }
 
-export async function list() {
+async function all(store) {
   const db = await open();
-  let items = [...mem.values()];
-  if (db) {
-    try { items = items.concat(await tx(db, 'readonly', s => s.getAll())); } catch {}
-  }
-  return items.sort((a, b) => b.made - a.made);
+  let items = [...mem[store].values()];
+  if (db) { try { items = items.concat(await tx(db, store, 'readonly', s => s.getAll())); } catch {} }
+  return items;
 }
 
-export async function add(item) {
+async function put(store, item) {
   const db = await open();
-  if (db) {
-    try { await tx(db, 'readwrite', s => s.put(item)); return; } catch {}
-  }
-  mem.set(item.id, item);
+  if (db) { try { await tx(db, store, 'readwrite', s => s.put(item)); return; } catch {} }
+  mem[store].set(item.id, item);
 }
 
-export async function remove(id) {
-  mem.delete(id);
+async function del(store, id) {
+  mem[store].delete(id);
   const db = await open();
-  if (db) { try { await tx(db, 'readwrite', s => s.delete(id)); } catch {} }
+  if (db) { try { await tx(db, store, 'readwrite', s => s.delete(id)); } catch {} }
 }
+
+export const list = async () => (await all('stickers')).sort((a, b) => b.made - a.made);
+export const add = item => put('stickers', item);
+export const remove = id => del('stickers', id);
+
+export const photos = async () => (await all('photos')).sort((a, b) => b.opened - a.opened);
+export async function addPhoto(item, keep = 8) {
+  await put('photos', item);
+  const old = (await photos()).slice(keep);
+  for (const p of old) await del('photos', p.id);
+}
+export const removePhoto = id => del('photos', id);
 
 // A plain zip (stored, not compressed: PNGs are compressed already).
 const CRC = (() => {

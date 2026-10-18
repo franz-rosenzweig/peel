@@ -6,4 +6,5 @@ Peel is MIT licensed (see LICENSE). It ships or downloads these, under their own
   off for a fixed 1024x1024 input); the computed result is the same.
 - ONNX Runtime Web 1.30.0 (https://github.com/microsoft/onnxruntime), MIT License,
   Copyright (c) Microsoft Corporation.
-- Nunito (https://github.com/googlefonts/nunito), SIL Open Font License 1.1, see app/fonts/OFL-nunito.txt.
+- Fonts in app/fonts, each with its licence file next to it: Nunito, Titan One, Pacifico, Caveat and
+  DM Serif Display under the SIL Open Font License 1.1, and Special Elite under the Apache License 2.0.
