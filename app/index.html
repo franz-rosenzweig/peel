@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Peel · photo to sticker</title>
+<meta name="description" content="Turn a photo into a sticker with a white border, for GoodNotes and anything else. Runs in your browser; nothing gets uploaded.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#FBF6EE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1D1B20" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="Peel">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="stylesheet" href="style.css">
+<script type="module" src="main.js"></script>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="./" aria-label="Peel, start over">
+    <svg viewBox="0 0 64 64" aria-hidden="true"><use href="#logo"/></svg>
+    <span>Peel</span>
+  </a>
+  <span class="tag">photo in, sticker out</span>
+  <button class="ghost" id="help" type="button">How do I use them?</button>
+</header>
+
+<main>
+  <section class="start" id="start">
+    <div class="drop" id="drop">
+      <svg class="hero" viewBox="0 0 320 200" aria-hidden="true"><use href="#hero"/></svg>
+      <h1>Turn any photo into a sticker</h1>
+      <p class="lede">Pick a photo and Peel cuts out the main thing, gives it a white border and gets it ready to paste into GoodNotes.</p>
+      <div class="row">
+        <label class="btn primary big" id="pickBtn">
+          <input type="file" accept="image/*" id="file" class="vh">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-photo"/></svg>Pick a photo
+        </label>
+        <button class="btn big" id="paste" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-paste"/></svg>Paste
+        </button>
+      </div>
+      <p class="small">or drop one here. Everything happens on your device, so your photos never get uploaded.</p>
+      <p class="small tip"><b>Tip:</b> already lifted something out of a photo on your iPad or iPhone? Hold on it, tap Copy, then come back and tap Paste.</p>
+    </div>
+  </section>
+
+  <section class="editor" id="editor" hidden>
+    <div class="stage" id="stage">
+      <canvas id="view" aria-label="Your sticker"></canvas>
+      <div class="stagebar" id="stagebar" hidden>
+        <span id="hint"></span>
+        <button class="btn small" id="whole" type="button" hidden>Whole photo</button>
+        <button class="btn small primary" id="doneFix" type="button">Done</button>
+      </div>
+      <div class="busy" id="busy" hidden>
+        <svg class="snip" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-scissors"/></svg>
+        <p id="busyText">Cutting it out…</p>
+        <div class="bar" id="barWrap" hidden><i id="bar"></i></div>
+        <p class="small" id="busySub"></p>
+      </div>
+    </div>
+
+    <aside class="panel">
+      <div class="group">
+        <h2>Shape</h2>
+        <div class="seg" id="kinds" role="radiogroup" aria-label="Shape">
+          <button type="button" role="radio" data-kind="cut"><svg viewBox="0 0 24 24"><use href="#i-scissors"/></svg>Cut out</button>
+          <button type="button" role="radio" data-kind="circle"><svg viewBox="0 0 24 24"><use href="#i-circle"/></svg>Circle</button>
+          <button type="button" role="radio" data-kind="heart"><svg viewBox="0 0 24 24"><use href="#i-heart"/></svg>Heart</button>
+          <button type="button" role="radio" data-kind="rounded"><svg viewBox="0 0 24 24"><use href="#i-square"/></svg>Square</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <h2>Fix it</h2>
+        <div class="tools">
+          <button type="button" data-tool="erase" class="cutonly"><svg viewBox="0 0 24 24"><use href="#i-eraser"/></svg>Erase</button>
+          <button type="button" data-tool="restore" class="cutonly"><svg viewBox="0 0 24 24"><use href="#i-brush"/></svg>Bring back</button>
+          <button type="button" data-tool="crop"><svg viewBox="0 0 24 24"><use href="#i-crop"/></svg><span id="cropLabel">Pick the thing</span></button>
+          <button type="button" id="undo" disabled><svg viewBox="0 0 24 24"><use href="#i-undo"/></svg>Undo</button>
+        </div>
+        <label class="slider" id="brushRow" hidden>
+          <span>Brush</span>
+          <input type="range" id="brush" min="1" max="12" step="0.5" value="4">
+        </label>
+      </div>
+
+      <div class="group">
+        <h2>Border</h2>
+        <label class="slider">
+          <span id="borderVal">Medium</span>
+          <input type="range" id="border" min="0" max="9" step="0.25" value="3.5" aria-label="Border size">
+        </label>
+        <div class="swatches" id="colors" role="radiogroup" aria-label="Border color"></div>
+        <label class="switch"><input type="checkbox" id="shadow" checked><span>Shadow</span></label>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" id="copy" type="button"><svg viewBox="0 0 24 24"><use href="#i-copy"/></svg>Copy</button>
+        <button class="btn" id="save" type="button"><svg viewBox="0 0 24 24"><use href="#i-save"/></svg>Save</button>
+        <button class="btn" id="keep" type="button"><svg viewBox="0 0 24 24"><use href="#i-star"/></svg>Keep</button>
+      </div>
+      <button class="btn ghost wide" id="again" type="button"><svg viewBox="0 0 24 24"><use href="#i-photo"/></svg>New photo</button>
+    </aside>
+  </section>
+
+  <section class="tray" id="tray">
+    <div class="trayhead">
+      <h2>My stickers <span id="count"></span></h2>
+      <button class="btn small" id="saveAll" type="button" hidden><svg viewBox="0 0 24 24"><use href="#i-save"/></svg>Save all</button>
+    </div>
+    <div class="grid" id="grid"></div>
+    <p class="empty" id="empty">Stickers you copy, save or keep land here, so you can grab them again later. They stay in this browser.</p>
+  </section>
+</main>
+
+<footer class="foot">
+  Peel works entirely in your browser. The cutting out is done by IS-Net (Apache-2.0) running on ONNX Runtime Web (MIT).
+  Part of <a href="/">stuffs</a>.
+</footer>
+
+<dialog id="helpDlg">
+  <form method="dialog">
+    <h2>Getting them into GoodNotes</h2>
+    <h3>One sticker</h3>
+    <p>Tap <b>Copy</b>, go to GoodNotes, then tap and hold the page where you want it and choose <b>Paste</b>. It comes in with no background, so you can move it, resize it and turn it.</p>
+    <h3>Keep it for later</h3>
+    <p>In GoodNotes, circle the sticker with the lasso, tap it and choose <b>Add Element</b>. It goes into your Elements, sorted into collections like a sticker book.</p>
+    <h3>A whole set</h3>
+    <p>Tap <b>Save all</b> under My stickers and choose <b>Save Images</b>, which puts them in Photos. Then in GoodNotes, open Elements, make a new collection and import them from Photos.</p>
+    <h3>Something else?</h3>
+    <p>They're ordinary PNG pictures with see-through backgrounds, so they work in Notability, Freeform, Procreate, Messages, Canva and anywhere else that takes a picture.</p>
+    <h3>When the cutout isn't right</h3>
+    <p><b>Pick the thing</b> lets you draw a box around what you want, which also helps when it's small in the photo. <b>Erase</b> and <b>Bring back</b> are brushes for the rest.</p>
+    <button class="btn primary" value="ok">Got it</button>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<input type="color" id="pickColor" class="vh" value="#ffd1dc" tabindex="-1" aria-hidden="true">
+
+<svg class="sprite" aria-hidden="true">
+  <defs>
+    <symbol id="logo" viewBox="0 0 64 64">
+      <path d="M14 6h28l16 16v28a8 8 0 0 1-8 8H14a8 8 0 0 1-8-8V14a8 8 0 0 1 8-8z" fill="var(--accent)"/>
+      <path d="M42 6v10a6 6 0 0 0 6 6h10z" fill="var(--peel)"/>
+      <path d="M42 6l16 16" stroke="var(--peel-edge)" stroke-width="2" fill="none"/>
+      <circle cx="24" cy="32" r="3.4" fill="#fff"/><circle cx="40" cy="32" r="3.4" fill="#fff"/>
+      <path d="M25 41q7 6 14 0" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="hero" viewBox="0 0 320 200">
+      <g class="hs">
+        <g transform="rotate(-9 92 104)">
+          <circle cx="92" cy="104" r="58" fill="#fff"/>
+          <circle cx="92" cy="104" r="49" fill="#9ED9C4"/>
+          <path d="M60 128c10-24 22-34 32-34s22 10 32 34z" fill="#5BB89A"/>
+          <circle cx="112" cy="84" r="9" fill="#FFE27A"/>
+        </g>
+      </g>
+      <g class="hs">
+        <path transform="rotate(8 228 96)" d="M228 158c-6-6-62-38-62-76 0-20 15-34 32-34 13 0 23 7 30 18 7-11 17-18 30-18 17 0 32 14 32 34 0 38-56 70-62 76z" fill="#fff"/>
+        <path transform="rotate(8 228 96)" d="M228 145c-8-7-50-35-50-63 0-14 10-24 22-24 11 0 19 7 28 21 9-14 17-21 28-21 12 0 22 10 22 24 0 28-42 56-50 63z" fill="var(--accent)"/>
+      </g>
+      <g class="hs">
+        <path transform="rotate(-6 166 150)" d="M166 108l12 25 27 4-20 19 5 27-24-13-24 13 5-27-20-19 27-4z" fill="#fff" stroke="#fff" stroke-width="14" stroke-linejoin="round"/>
+        <path transform="rotate(-6 166 150)" d="M166 108l12 25 27 4-20 19 5 27-24-13-24 13 5-27-20-19 27-4z" fill="#FFD25E" stroke="#FFD25E" stroke-width="3" stroke-linejoin="round"/>
+      </g>
+    </symbol>
+    <symbol id="i-photo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></g></symbol>
+    <symbol id="i-paste" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11h6M9 15h4"/></g></symbol>
+    <symbol id="i-scissors" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.1 8.1L20 20M8.1 15.9L20 4"/></g></symbol>
+    <symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.3a4.3 4.3 0 0 1 7.5 2.5C19.5 15.4 12 20 12 20z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-square" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-eraser" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20h13M4.6 14.6l9.9-9.9a2 2 0 0 1 2.8 0l2 2a2 2 0 0 1 0 2.8L11 18H8z"/><path d="M9.5 9.7l4.8 4.8"/></g></symbol>
+    <symbol id="i-brush" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4.5l5 5L11 18l-5-5z"/><path d="M6 13c-2 0-3 1.5-3 3.5S2 20 2 20s3.5.5 5.5-1.5S7 15 6 13z"/></g></symbol>
+    <symbol id="i-crop" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><circle cx="12" cy="12" r="2.5"/></g></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></g></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></g></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></g></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></g></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+</body>
+</html>
