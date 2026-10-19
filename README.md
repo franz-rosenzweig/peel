@@ -1,95 +1,179 @@
-# Peel
+<p align="center">
+  <img src="app/icon-512.png" width="120" alt="">
+</p>
+<h1 align="center">Peel</h1>
+<p align="center"><b>Turn a photo into a sticker with a white die-cut border, right in your browser.</b><br>Made with GoodNotes in mind, and your photos never leave your device.</p>
+<p align="center">
+  <img src="https://img.shields.io/badge/web-app-E8505B?style=flat-square" alt="Web app">
+  <img src="https://img.shields.io/badge/works%20on-iPad%20%C2%B7%20phone%20%C2%B7%20computer-E8505B?style=flat-square" alt="Works on iPad, phone and computer">
+  <img src="https://img.shields.io/badge/uploads-none-E8505B?style=flat-square" alt="Uploads: none">
+  <img src="https://img.shields.io/badge/export-PNG%20%C2%B7%20PDF-E8505B?style=flat-square" alt="Export: PNG and PDF">
+  <img src="https://img.shields.io/badge/license-MIT-E8505B?style=flat-square" alt="MIT license">
+</p>
+<p align="center">
+  <a href="docs/README.md"><b>Docs</b></a> ·
+  <a href="#install">Install</a> ·
+  <a href="#features">Features</a> ·
+  <a href="#screenshots">Screenshots</a> ·
+  <a href="docs/goodnotes.md">Into GoodNotes</a>
+</p>
 
-Peel turns a photo into a sticker. You pick a photo, it cuts out the main thing, gives it a white border
-like a real die-cut sticker and hands you a PNG with a see-through background, which you can paste straight
-into GoodNotes or anywhere else.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/hero-dark.png">
+  <img src="docs/images/hero-light.png" alt="Peel on an iPad: a corgi cut out of its photo with a white sticker border, and the Style tab open beside it">
+</picture>
 
-I made it because the free options either want a subscription before they'll give you a transparent PNG
-(Canva) or only let you do one a day (remove.bg), and none of them do the white border. This one is FREE, with
-no account, and everything happens on your own device, which means your photos never get uploaded anywhere.
-The only thing it downloads is the cutter itself, about 90 MB the first time, and after that it's saved in
+## Why I made it
+
+Peel turns a photo into a sticker. You pick a photo, it cuts out the main thing, gives it a white border like a
+real die-cut sticker and hands you a PNG with a see-through background, which you can paste straight into
+GoodNotes or anywhere else that takes a picture.
+
+I made it with GoodNotes in mind, for anyone who keeps notes, a journal or a planner on an iPad and wants
+stickers of their OWN photos: the dog, a plant, a mug, a ticket stub. The free tools I found either want a
+subscription before they'll give you a see-through PNG, or let you do one or two and then ask you to pay, and
+most of them don't add the white border at all, which is the part that makes it look like a sticker.
+
+Peel is free, there's no account, and everything happens on your own device, which means your photos never get
+uploaded anywhere. Basically, instead of a background remover, a photo editor and a sticker app, you only have
+one page to open.
+
+## Features
+
+### Making it
+- **Cut out.** Pick a photo and Peel finds the main thing in it and cuts it out. Small stray bits next to it
+  (a corner of the table, blurry lights in the back) are dropped on their own.
+- **Pick the thing.** Drag a box around what you want and it cuts again from just that part, which is how you
+  choose one thing out of a busy photo.
+- **Several from one photo.** After **Keep**, Peel goes straight back to the box so you can pick the next part.
+  When the cutout has separate things in it, **Keep each piece separately** makes one sticker of each in one tap.
+- **Circle, Heart, Square.** Photo stickers in a shape, with no cutting involved.
+- **Text sticker.** Words on their own, in six fonts, with the border wrapping around the letters.
+- **Many at once.** **Pick photos** takes several and makes a sticker of each with the style you have set.
+- **Paste.** If you lifted something out of a photo on your iPad or iPhone, copy it and paste it in, and Peel
+  skips the cutting and just adds the border.
+- **Recent photos.** Your last eight photos wait on the start screen, for another sticker from the same photo later.
+
+### Fixing it
+- **Erase and Bring back.** Brushes for the bits the cutter got wrong, with pinch to zoom and two fingers to move around.
+- **Magic wand.** Tap a colour to take it out, just the patch you touched or everywhere, which is the quickest way
+  to clear a plain background or lift a doodle off paper.
+- **Remove piece.** Tap a stray bit and it's gone.
+- **Edge.** Shrink or grow the edge by a few pixels, and smooth it. Shrinking takes off a halo of the old background.
+- **Undo and Redo,** 25 steps.
+
+### Dressing it up
+- **Border and shadow.** From none to chunky, in white or any colour.
+- **Outline.** A line, a double line or a dashed line around the border, in any colour.
+- **Cutout only.** Just the cutout on a see-through background, with no border, outline or shadow.
+- **Turn and flip,** and a preview on paper, on a see-through checkerboard or on dark.
+- **Photo looks.** Vivid, Pastel, Vintage, B&W, Warm and Cool, plus brightness, contrast and colour.
+- **Words on a sticker.** Type something, pick a font and a colour and drag it where you want it.
+
+### Getting it out
+- **Copy, Save, Keep.** Copy puts the PNG on the clipboard, ready to paste into GoodNotes. Save opens the share
+  sheet on an iPad or phone and downloads on a computer. Every sticker you copy, save or keep lands in "My stickers".
+- **Sharp at any size.** Small (512 px), Medium (1024 px) or Large (as big as the photo allows, up to 2400 px).
+  The export is made again from the full photo, so a small thing in a big photo still comes out crisp.
+- **My stickers.** Tap one to open it again and change it. **Save all** hands over the lot at once.
+- **Sticker sheets.** **Make a sheet** lays your stickers out on Letter, A4, an iPad page or a square, as pictures
+  or one PDF, to print on sticker paper or to add to GoodNotes as a page.
+
+## Screenshots
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/ipads-dark.png">
+  <img src="docs/images/ipads-light.png" alt="Three iPad screens: the start screen with recent photos and My stickers, a box drawn around the corgi, and the Large size with Copy, Save and Keep">
+</picture>
+
+![Dragging a box around one strawberry in a photo of two](docs/images/pick-the-thing.png)
+*"Pick the thing": drag a box around the part you want and Peel cuts again from just that.*
+
+![Six gummy sweets cut out, with the button Keep each piece separately (5)](docs/images/pieces.png)
+*When the cutout has separate things in it, one tap makes a sticker of each.*
+
+![The corgi sticker with a dashed outline, and the outline colours in the Style tab](docs/images/style-outline.png)
+*Border, outline, shadow and turn, all under Style.*
+
+<details>
+<summary>More screenshots</summary>
+
+![The same corgi sticker on paper, on a see-through checkerboard and on dark](docs/images/backgrounds.png)
+*The preview background: paper, see-through and dark.*
+
+![The corgi cut out with no border on a checkerboard, with Cutout only chosen](docs/images/cutout-only.png)
+*"Cutout only": just the cutout, no border.*
+
+![The Erase brush zoomed in on the corgi's ears](docs/images/erase-zoom.png)
+*Erase and Bring back, zoomed in for the fiddly bits.*
+
+![The words Good boy in a red script font under the corgi](docs/images/text-on-sticker.png)
+*Words on a sticker, and the border wraps around them.*
+
+![My stickers with nine stickers, the Make a sheet and Save all buttons, and the recent photos above](docs/images/my-stickers.png)
+*My stickers, with everything you copied, saved or kept.*
+
+![The sticker sheet dialog with the stickers laid out on a Letter page](docs/images/sheet.png)
+*A sticker sheet, to print or to add to GoodNotes as a page.*
+
+![Peel on an iPad in dark mode, with the Large size chosen and My stickers below](docs/images/export-dark.png)
+*On an iPad in dark mode: the size, Copy, Save and Keep.*
+
+</details>
+
+## Install
+
+### On the web
+There's nothing to install. Open Peel in Safari on your iPad (or any up-to-date browser on a phone or computer),
+pick a photo and you have a sticker. The link to my copy is in [Install](docs/install.md). The first time you cut
+something out, it downloads the cutter (about 90 MB) and the engine that runs it, and after that they're kept in
 the browser.
 
-Live at **https://stuffs.tiresia.xyz/stickers/**, part of [stuffs](https://stuffs.tiresia.xyz).
+### On your Home Screen
+On an iPad or iPhone, tap the Share button in Safari and choose **Add to Home Screen**, and Peel opens like an app
+with its own icon. [Install](docs/install.md) has the steps for other browsers too.
 
-## What it does
+### Your own copy
+Peel is a folder of plain files with no build step, so any web server can host it. You fetch the cutter once with
+`tools/fetch.sh` and send two headers that let it use more than one processor core. [Your own copy](docs/server.md)
+has the details.
 
-**Making it**
-- **Cut out**: IS-Net (DIS, general use) finds the main subject. Stray bits that are small next to it
-  (bokeh, a corner of the table) are dropped automatically.
-- **Circle, Heart, Square**: photo stickers in a shape, no cutting involved.
-- **Text sticker**: words on their own, in six fonts, with the border wrapping the letters.
-- **Pick photos** takes several at once and makes a sticker of each (batch), with the current style.
-- **Paste** takes a picture from the clipboard. If it already has a see-through background (lifted out of a
-  photo on an iPhone or iPad), Peel skips the cutting and just adds the border.
-- **Recent photos** on the start screen open the last eight photos again.
+## Documentation
 
-**Fixing it** (the Cut tab)
-- **Erase / Bring back** brushes, with pinch to zoom and two-finger pan (or + / − / Fit, ctrl+scroll on a computer).
-- **Magic wand**: tap a colour to take it out, touching only or everywhere, with a tolerance. "Start from the
-  whole photo" plus the wand is the way to lift a doodle or lettering off paper.
-- **Remove piece**: tap a stray bit and it's gone.
-- **Pick the thing**: drag a box around what you want and it cuts again from just that part. After **Keep**,
-  Peel goes straight back to the box view for the next part of the same photo.
-- **Keep each piece separately**: when the cutout has separate things, one sticker each in one tap.
-- **Edge**: shrink or grow the edge a few pixels (shrinking takes off a halo of old background) and smooth it.
-- **Undo / Redo**, 25 steps.
+The docs walk through everything Peel does, in order:
 
-**Dressing it up**
-- **Style**: Sticker or **Cutout only** (just the cutout on a see-through background); border from none to
-  chunky in any colour; outline None / Line / Double / Dashed in any colour; shadow; turn and flip.
-- **Photo**: looks (Vivid, Pastel, Vintage, B&W, Warm, Cool) plus brightness, contrast and colour.
-- **Text**: words on a photo sticker, in six fonts, any colour and size, dragged where you want them.
-- The preview background switches between paper, see-through (checkerboard) and dark.
+- **Getting started:** [What is Peel?](docs/what-is-peel.md) and [Install](docs/install.md)
+- **Using Peel:** [Making a sticker](docs/making-a-sticker.md), [Fixing the cutout](docs/fixing-the-cutout.md),
+  [Dressing it up](docs/dressing-it-up.md) and [Getting it out](docs/getting-it-out.md)
+- **GoodNotes and other apps:** [Into GoodNotes](docs/goodnotes.md)
+- **Running your own copy:** [Your own copy](docs/server.md)
+- **Under the hood:** [Developing](docs/DEVELOPING.md)
 
-**Getting it out**
-- **Size**: Small (512 px), Medium (1024 px) or Large (as big as the photo allows, up to 2400 px). Every export
-  is a PNG with a see-through background. Cutting and fixing happen on a copy of the photo up to 1200 px, but the
-  export is made again from the photo itself, so a small thing in a big photo still comes out sharp.
-- **Copy / Save / Keep**: Copy puts the PNG on the clipboard; Save opens the share sheet on a phone or tablet
-  (Save Image, Save to Files) and downloads on a computer. Everything copied, saved or kept lands in
-  **My stickers** (IndexedDB, this browser only), with what it takes to **open it again** and change it.
-- **Save all** shares or zips the lot. **Make a sheet** lays them out on Letter, A4, an iPad page or a square,
-  as PNGs or one PDF, to print on sticker paper or import into GoodNotes as a page.
+Start with [What is Peel?](docs/what-is-peel.md)
 
-## How it runs
+## How it's built
 
-Plain ES modules, no build step.
+- Plain HTML, CSS and JavaScript modules in `app/`, with no framework and no build step.
+- The cutting out is done by IS-Net (DIS, general use), running in the browser on ONNX Runtime Web, on the
+  graphics chip (WebGPU) when the browser has it and on the processor (WebAssembly) otherwise.
+- Everything you make stays in your browser: My stickers and recent photos in IndexedDB, the cutter in Cache
+  Storage, and your settings in local storage.
+- Borders, outlines, the edge tools, the magic wand, sticker sheets (with a small PDF writer) and zips are all
+  done in the page with plain canvas code, with no libraries.
 
-| File | What |
-|---|---|
-| `app/index.html`, `app/style.css` | The page. Phone, tablet and computer layouts; light and dark. |
-| `app/main.js` | Screens, tabs, tools, pinch and zoom, undo/redo, copy/save/keep, batch, recent photos, the sheet dialog. `window.__peel` is there for checks. |
-| `app/compose.js` | The pipeline from a "doc" (photo, mask, settings) to the finished PNG: edge → photo look → text → border/outline → turn/shadow → size, cached step by step. Exports are made again from the full-size photo, around the subject only, with the mask made bigger smoothly and the text drawn again. |
-| `app/sticker.js` | Masks: the distance transform, the die-cut border, outlines (incl. marching squares for the dashed line), shapes, brushes, wand, pieces, edge tools. |
-| `app/cutout.js` | Loads ONNX Runtime Web and the model, runs it. WebGPU when the browser has it, otherwise WebAssembly on up to 4 threads. Falls back to WebAssembly if the GPU fails or returns nonsense. |
-| `app/fx.js`, `app/text.js`, `app/sheet.js` | Photo looks; text layout and fonts; sheet layout and a small PDF writer. |
-| `app/store.js` | My stickers and recent photos (IndexedDB) and a tiny zip writer. |
+## Credits
 
-The model (`app/models/isnet-general-h2f.onnx`) and ONNX Runtime (`app/vendor/ort/`) aren't in git.
-`tools/fetch.sh` gets ONNX Runtime Web 1.30.0 from npm and runs `tools/build_model.py`, which downloads
-rembg's `isnet-general-use.onnx` and rewrites it (see the script for the three changes and why).
+Peel stands on these, each under its own terms (the same list is in [NOTICE](NOTICE)):
 
-The page has to be **cross-origin isolated** for WebAssembly threads, so the stuffs Caddyfile sends
-`Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` for `/stickers/*`.
-Without them it still works, on one thread. Clipboard, Cache Storage and isolation all need https or localhost.
+- **IS-Net "isnet-general-use"** weights from [DIS](https://github.com/xuebinqin/DIS) (Xuebin Qin et al.),
+  Apache License 2.0, via the ONNX export in [rembg](https://github.com/danielgatis/rembg) (MIT).
+  `tools/build_model.py` changes the storage (float16 weights, side outputs dropped, MaxPool ceil_mode off for a
+  fixed 1024x1024 input); the computed result is the same.
+- **[ONNX Runtime Web](https://github.com/microsoft/onnxruntime) 1.30.0**, MIT License, Copyright (c) Microsoft Corporation.
+- **Fonts** in `app/fonts`, each with its licence file next to it: Nunito, Titan One, Pacifico, Caveat and
+  DM Serif Display under the SIL Open Font License 1.1, and Special Elite under the Apache License 2.0.
 
-## Checks and deploy
+The photos in the screenshots are public domain or CC0, from Wikimedia Commons, credited in
+[docs/images/CREDITS.md](docs/images/CREDITS.md).
 
-```
-tools/serve.py 8466 ~/some/photos          # local copy with the same headers, photos at /test/
-tools/walk.py http://127.0.0.1:8466 /tmp/peel                    # computer layout, every tool
-tools/walk.py http://127.0.0.1:8466 /tmp/peel-m --mobile --dark  # phone, dark, real touch events
-tools/walk.py https://stuffs.tiresia.xyz/stickers /tmp/peel-live --photos ~/some/photos
-tools/deploy.sh                            # rsync app/ to /srv/docker/stuffs/site/stickers/
-```
-
-`walk.py` cuts a photo, then goes through Cutout only, the outlines, turn and flip, the photo looks, text and
-moving it, the export size, a two-finger pinch, erasing while zoomed, undo/redo, the edge tools, Keep and
-reopening, the wand, Remove piece, Split, a text sticker, a batch, recent photos and the sheet (including a PDF),
-screenshotting each step. It prints a line per check and any page errors, and exits 1 if anything failed.
-`--photo`, `--plain` and `--group` pick the test photos (main, plain background, separate things).
-`?ep=wasm` or `?ep=webgpu` on the URL forces one way of running the model.
-
-If the model file ever changes, give it a new name (or bump `CACHE` in `cutout.js`) and update `MODEL_BYTES`,
-because browsers keep the old one in Cache Storage under its URL.
+Peel itself is MIT licensed, see [LICENSE](LICENSE).
